@@ -69,6 +69,7 @@ export function ProjectsView({ user, projects, setProjects, boq, setBoq, showToa
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "BOQ");
     XLSX.writeFile(wb, "BOQ_Template.xlsx");
+    showToast("BOQ template downloaded!");
   };
 
   return (

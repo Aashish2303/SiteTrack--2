@@ -31,6 +31,7 @@ export function SubconLedger({ user, projects, subconLedger, setSubconLedger, sh
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Subcon Ledger");
     XLSX.writeFile(wb, "Subcontractor_Ledger.xlsx");
+    showToast("Subcontractor ledger downloaded!");
   };
 
   return (

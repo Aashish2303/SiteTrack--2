@@ -31,6 +31,7 @@ export function VendorLedger({ user, projects, vendorLedger, setVendorLedger, ve
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Vendor Ledger");
     XLSX.writeFile(wb, "Material_Vendor_Ledger.xlsx");
+    showToast("Vendor ledger downloaded!");
     showToast("Exported!");
   };
 

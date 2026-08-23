@@ -38,14 +38,17 @@ export function DWRView({ user, projects, dwr, setDwr, showToast }: any) {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "DWR");
     XLSX.writeFile(wb, "DWR.xlsx");
+    showToast("DWR Excel downloaded!");
   };
 
   const exportPDF = () => {
     const html = `<!DOCTYPE html><html><head><title>DWR</title><style>body{font-family:Arial;padding:20px}h1{color:#fb923c}table{width:100%;border-collapse:collapse;font-size:11px}th{background:#fb923c;color:#fff;padding:6px}td{padding:5px;border:1px solid #ddd}</style></head><body><h1>Daily Work Report</h1><p>Date: ${new Date().toLocaleDateString("en-IN")}</p><table><thead><tr><th>#</th><th>Date</th><th>Project</th><th>Description</th><th>Location</th><th>Qty</th><th>Status</th><th>CF</th><th>Engineer</th></tr></thead><tbody>${dwr.map((r: any, i: number) => `<tr><td>${i + 1}</td><td>${r.date}</td><td>${projects.find((p: any) => p.id === r.projectId)?.name || "-"}</td><td>${r.description}</td><td>${r.location}</td><td>${r.quantity}</td><td>${r.workStatus || "-"}</td><td>${r.carryForward ? "✓" : "-"}</td><td>${r.engineer}</td></tr>`).join("")}</tbody></table></body></html>`;
     const w = window.open("", "_blank");
+    if (!w) return showToast("Allow pop-ups to print the DWR.", "error");
     w?.document.write(html);
     w?.document.close();
     setTimeout(() => w?.print(), 300);
+    showToast("DWR opened for printing!");
   };
 
   return (

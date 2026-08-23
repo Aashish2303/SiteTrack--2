@@ -37,10 +37,16 @@ export function VendorDirectory({ user, vendorDB, setVendorDB, showToast }: any)
   };
 
   const delV = (id: number) => {
-    if (confirm("Delete vendor?")) {
-      setVendorDB((d: any) => d.filter((v: any) => v.id !== id));
-      showToast("Deleted", "error");
-    }
+    showToast("Delete this vendor?", "warning", {
+      duration: 0,
+      action: {
+        label: "Delete",
+        onClick: () => {
+          setVendorDB((d: any) => d.filter((v: any) => v.id !== id));
+          showToast("Vendor deleted", "info");
+        },
+      },
+    });
   };
 
   const upCard = (e: any) => {
@@ -58,6 +64,7 @@ export function VendorDirectory({ user, vendorDB, setVendorDB, showToast }: any)
 
   const viewCard = (p: string, n: string) => {
     const w = window.open("", "_blank");
+    if (!w) return showToast("Allow pop-ups to view the visiting card.", "error");
     w?.document.write(`<html><head><title>${n}</title><style>body{margin:0;background:#0a0e1a;display:flex;align-items:center;justify-content:center;min-height:100vh}img{max-width:100%;max-height:90vh;border-radius:8px}</style></head><body><img src="${p}"/></body></html>`);
     w?.document.close();
   };

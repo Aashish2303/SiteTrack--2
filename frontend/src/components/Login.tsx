@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { USERS, ROLE_META } from '../constants';
 import { ConstructionScene } from './ConstructionScene';
 
-export function Login({ onLogin }: any) {
+export function Login({ onLogin, showToast }: any) {
   const [u, setU] = useState("");
   const [p, setP] = useState("");
   const [err, setErr] = useState("");
@@ -15,6 +15,7 @@ export function Login({ onLogin }: any) {
     const usr = USERS.find(x => x.username === u.trim() && x.password === p);
     if (!usr) {
       setErr("Wrong username or password");
+      showToast?.("Wrong username or password", "error");
       setLoading(false);
       return;
     }

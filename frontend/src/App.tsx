@@ -17,16 +17,20 @@ import { VendorDirectory } from './components/VendorDirectory';
 import { MaterialOrders } from './components/MaterialOrders';
 import { QMSReports } from './components/QMSReports';
 import { Badge } from './components/UI';
+import { ToastProvider, useToast } from './components/Toast';
 
 export default function App() {
+  return <ToastProvider><AppContent /></ToastProvider>;
+}
+
+function AppContent() {
+  const { showToast } = useToast();
   const [user, setUser] = useState(() => lsG("user", null));
   const [mod, setMod] = useState("today");
   const [activeProjectId, setActiveProjectId] = useState<number | null>(null);
-  const [toast, setToast] = useState<{ msg: string, type: string } | null>(null);
   const [notifOpen, setNotifOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const showToast = (msg: string, type: string = "success") => { setToast({ msg, type }); setTimeout(() => setToast(null), 3800); };
   
   const [projects, setProjects] = useStore("projects", SD_PROJECTS);
   const [boq, setBoq] = useStore("boq", SD_BOQ);
@@ -62,7 +66,7 @@ export default function App() {
     return n;
   }, [mat, stockMap, indents, issues, user]);
 
-  if (!user) return <Login onLogin={(u: any) => { lsS("user", u); setUser(u); }} />;
+  if (!user) return <Login onLogin={(u: any) => { lsS("user", u); setUser(u); showToast(`Welcome, ${u.name}!`); }} showToast={showToast} />;
 
   const GLOBAL_NAV = [
     { id: "today", icon: "ti-bolt", label: "Dashboard" },
@@ -179,7 +183,7 @@ export default function App() {
           <div style={{ background: "var(--s2)", padding: "12px", display: "flex", alignItems: "center", gap: 12 }}>
             <div style={{ flex: 1, textAlign: "right" }}><div style={{ fontSize: 13, fontWeight: 800 }}>{user.name}</div><div style={{ fontSize: 10, color: "var(--acc)", fontWeight: 800, textTransform: "uppercase" }}>{ROLE_META[user.role].label}</div></div>
             <div style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--br2)", border: "2px solid var(--acc)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, color: "var(--t1)" }}>{user.avatar}</div>
-            <button onClick={() => { if (window.confirm("Sign out?")) { lsS("user", null); setUser(null); } }} style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--t3)" }}><i className="ti ti-logout" style={{ fontSize: 16 }} /></button>
+            <button onClick={() => showToast("Are you sure you want to sign out?", "warning", { duration: 0, action: { label: "Sign out", onClick: () => { lsS("user", null); setUser(null); showToast("You have been signed out.", "info"); } } })} style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--t3)" }}><i className="ti ti-logout" style={{ fontSize: 16 }} /></button>
           </div>
         </div>
       </aside>
@@ -223,11 +227,6 @@ export default function App() {
         <div style={{ flex: 1, padding: "22px 24px 60px" }} className="fadeIn">{renderMod()}</div>
       </main>
 
-      {toast && (
-        <div className="fadeIn" style={{ position: "fixed", bottom: 24, right: 24, background: toast.type === "error" ? "linear-gradient(135deg, #ef4444, #dc2626)" : "linear-gradient(135deg, #10b981, #059669)", color: "#fff", padding: "12px 20px", borderRadius: 12, boxShadow: "0 12px 40px rgba(0,0,0,0.4)", fontSize: 13, fontWeight: 600, zIndex: 9999, display: "flex", alignItems: "center", gap: 9, maxWidth: 380 }}>
-          <i className={"ti " + (toast.type === "error" ? "ti-alert-circle" : "ti-circle-check")} style={{ fontSize: 18 }} />{toast.msg}
-        </div>
-      )}
     </div>
   );
 }

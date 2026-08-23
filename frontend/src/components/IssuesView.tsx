@@ -39,6 +39,7 @@ export function IssuesView({ user, projects, issues, setIssues, showToast }: any
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Issues");
     XLSX.writeFile(wb, "Issues_Report.xlsx");
+    showToast("Issues report downloaded!");
   };
 
   return (

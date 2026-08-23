@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 
 const LS = "stv3_";
+const API_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 
 const fetchData = async () => {
   try {
-    const res = await fetch('/api/data');
+    const res = await fetch(`${API_URL}/api/data`);
     return await res.json();
   } catch (e) {
     console.error("Failed to fetch data", e);
@@ -14,7 +15,7 @@ const fetchData = async () => {
 
 const pushData = async (data: any) => {
   try {
-    await fetch('/api/data', {
+    await fetch(`${API_URL}/api/data`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)

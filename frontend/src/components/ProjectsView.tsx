@@ -62,9 +62,9 @@ export function ProjectsView({ user, projects, setProjects, boq, setBoq, showToa
 
   const dlTemplate = () => {
     const ws = XLSX.utils.json_to_sheet([
-      { Item: "Earthwork Excavation", Unit: "Cum", Qty: 500, Rate: 280 },
-      { Item: "RCC Slab", Unit: "Cum", Qty: 85, Rate: 7800 },
-      { Item: "Brickwork", Unit: "Sqm", Qty: 800, Rate: 850 }
+      { "S.No": 1, Item: "Earthwork Excavation", Unit: "Cum", Qty: 500, Rate: 280, Remarks: "" },
+      { "S.No": 2, Item: "RCC Slab", Unit: "Cum", Qty: 85, Rate: 7800, Remarks: "" },
+      { "S.No": 3, Item: "Brickwork", Unit: "Sqm", Qty: 800, Rate: 850, Remarks: "" }
     ]);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "BOQ");
@@ -91,7 +91,7 @@ export function ProjectsView({ user, projects, setProjects, boq, setBoq, showToa
           <div style={{ background: "var(--s2)", border: "2px dashed var(--br2)", borderRadius: 12, padding: 20, textAlign: "center", marginBottom: 14 }}>
             <i className="ti ti-file-spreadsheet" style={{ fontSize: 36, color: "#10b981", marginBottom: 8, display: "block" }} />
             <div style={{ fontWeight: 700, marginBottom: 5 }}>Upload BOQ Excel</div>
-            <div style={{ fontSize: 12, color: "var(--t3)", marginBottom: 12 }}>Columns: Item, Unit, Qty, Rate</div>
+            <div style={{ fontSize: 12, color: "var(--t3)", marginBottom: 12 }}>Columns: S.No, Item, Unit, Qty, Rate, Remarks</div>
             <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
               <Btn variant="success" icon="ti-upload" sm onClick={() => fRef.current.click()}>Choose File</Btn>
               <Btn variant="ghost" sm icon="ti-download" onClick={dlTemplate}>Template</Btn>

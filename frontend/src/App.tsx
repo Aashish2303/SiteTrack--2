@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useStore, lsS, lsG } from './store';
-import { SD_PROJECTS, SD_BOQ, SD_DWR, SD_DPR, SD_MAT, SD_TXN, SD_INDENTS, SD_LABOUR, SD_ISSUES, SD_SUBCON, SD_VENDOR_LEDGER, SD_VENDOR_DB, SD_ORDERS, ROLE_META, canSeeFinance } from './constants';
+import { USERS, SD_PROJECTS, SD_BOQ, SD_DWR, SD_DPR, SD_MAT, SD_TXN, SD_INDENTS, SD_LABOUR, SD_ISSUES, SD_SUBCON, SD_VENDOR_LEDGER, SD_VENDOR_DB, SD_ORDERS, ROLE_META, canSeeFinance } from './constants';
 import { Login } from './components/Login';
 import { Today } from './components/Today';
 import { ProjectsView } from './components/ProjectsView';
@@ -18,18 +18,49 @@ import { MaterialOrders } from './components/MaterialOrders';
 import { QMSReports } from './components/QMSReports';
 import { Badge } from './components/UI';
 import { ToastProvider, useToast } from './components/Toast';
+import { AdminPage } from './components/AdminPage';
 
 export default function App() {
-  return <ToastProvider><AppContent /></ToastProvider>;
+  return <ToastProvider><RouteApp /></ToastProvider>;
+}
+
+function RouteApp() {
+  const [route, setRoute] = useState(() => window.location.pathname);
+
+  useEffect(() => {
+    const onPopState = () => setRoute(window.location.pathname);
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
+
+  if (route === '/admin') return <AdminPage />;
+  return <AppContent />;
 }
 
 function AppContent() {
   const { showToast } = useToast();
   const [user, setUser] = useState(() => lsG("user", null));
+  const [users, setUsers] = useState(() => lsG("users", USERS));
   const [mod, setMod] = useState("today");
   const [activeProjectId, setActiveProjectId] = useState<number | null>(null);
   const [notifOpen, setNotifOpen] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  const navigateModule = (nextMod: string) => {
+    if (nextMod === mod) return;
+    window.history.pushState({ module: nextMod }, '', `/?module=${nextMod}`);
+    setMod(nextMod);
+    setSidebarOpen(false);
+  };
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const initialModule = params.get('module');
+    if (initialModule) setMod(initialModule);
+    const onPopState = () => setMod(new URLSearchParams(window.location.search).get('module') || 'today');
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
 
   
   const [projects, setProjects] = useStore("projects", SD_PROJECTS);
@@ -66,7 +97,7 @@ function AppContent() {
     return n;
   }, [mat, stockMap, indents, issues, user]);
 
-  if (!user) return <Login onLogin={(u: any) => { lsS("user", u); setUser(u); showToast(`Welcome, ${u.name}!`); }} showToast={showToast} />;
+  if (!user) return <Login users={users} onLogin={(u: any) => { lsS("user", u); setUser(u); showToast(`Welcome, ${u.name}!`); }} onSignUp={(u: any) => { const next = [...users, u]; setUsers(next); lsS("users", next); lsS("user", u); setUser(u); showToast(`Welcome to SiteTrack, ${u.name}!`); }} showToast={showToast} />;
 
   const GLOBAL_NAV = [
     { id: "today", icon: "ti-bolt", label: "Dashboard" },
@@ -89,12 +120,13 @@ function AppContent() {
     { id: "indents", icon: "ti-package", label: "Indents & Quotes" },
     { id: "labour", icon: "ti-users", label: "Labour Tracker" },
     { id: "issues", icon: "ti-alert-triangle", label: "Issues/Incidents" },
-    { id: "reports", icon: "ti-file-report", label: "QMS Reports" },
+    ...(user.role !== "engineer" ? [{ id: "reports", icon: "ti-file-report", label: "QMS Reports" }] : []),
   ];
 
-  const common = { user, projects, showToast, activeProjectId, setActiveProjectId, setMod };
+  const common = { user, projects, showToast, activeProjectId, setActiveProjectId, setMod: navigateModule };
 
   const renderMod = () => {
+    if (mod === "reports" && user.role === "engineer") return <Today {...common} dwr={dwr} dpr={dpr} boq={boq} indents={indents} mat={mat} labour={labour} issues={issues} stockMap={stockMap} setMod={navigateModule} />;
     // If activeProjectId is set, only pass filtered data to components
     const filteredProps = {
       ...common,
@@ -108,7 +140,7 @@ function AppContent() {
       txn: activeProjectId ? txn.filter((t:any) => t.projectId === activeProjectId) : txn,
     };
 
-    if (mod === "today") return <Today {...common} dwr={dwr} dpr={dpr} boq={boq} indents={indents} mat={mat} labour={labour} issues={issues} stockMap={stockMap} setMod={setMod} />;
+    if (mod === "today") return <Today {...common} dwr={dwr} dpr={dpr} boq={boq} indents={indents} mat={mat} labour={labour} issues={issues} stockMap={stockMap} setMod={navigateModule} />;
     if (mod === "projects") return <ProjectsView {...common} setProjects={setProjects} boq={boq} setBoq={setBoq} />;
     if (mod === "dwr") return <DWRView {...filteredProps} setDwr={setDwr} />;
     if (mod === "dpr") return <DPRView {...filteredProps} setDpr={setDpr} setBoq={setBoq} />;
@@ -136,7 +168,7 @@ function AppContent() {
     const active = mod === n.id;
     const badge = n.id === "indents" ? pendingCount : n.id === "issues" ? openIssueCount : 0;
     return (
-      <div key={n.id} onClick={() => { setMod(n.id); setSidebarOpen(false); }} className={active ? "nav-active" : ""} style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", cursor: "pointer", background: active ? "var(--acc-dim)" : "transparent", color: active ? "var(--acc)" : "var(--t3)", fontSize: 13, fontWeight: active ? 800 : 600, userSelect: "none", transition: "all 0.1s" }}
+      <div key={n.id} onClick={() => navigateModule(n.id)} className={active ? "nav-active" : ""} style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", cursor: "pointer", background: active ? "var(--acc-dim)" : "transparent", color: active ? "var(--acc)" : "var(--t3)", fontSize: 13, fontWeight: active ? 800 : 600, userSelect: "none", transition: "all 0.1s" }}
         onMouseEnter={(e: any) => { if (!active) e.currentTarget.style.background = "var(--s2)"; }}
         onMouseLeave={(e: any) => { if (!active) e.currentTarget.style.background = "transparent"; }}>
         <i className={"ti " + n.icon} style={{ fontSize: 15, color: active ? "#fb923c" : "var(--t3)", flexShrink: 0 }} /><span style={{ flex: 1 }}>{n.label}</span>
@@ -150,7 +182,7 @@ function AppContent() {
   return (
     <div style={{ display: "flex", minHeight: "100vh" }}>
       <div className={`mobile-overlay ${sidebarOpen ? 'open' : ''}`} onClick={() => setSidebarOpen(false)} />
-      <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`} style={{ width: 240, background: "var(--s1)", minHeight: "100vh", display: "flex", flexDirection: "column", position: "fixed", left: 0, top: 0, zIndex: 100, borderRight: "1px solid var(--br)" }}>
+      <aside className={`sidebar app-sidebar ${sidebarOpen ? 'open' : ''}`} style={{ width: 240, background: "var(--s1)", minHeight: "100vh", display: "flex", flexDirection: "column", position: "fixed", left: 0, top: 0, zIndex: 100, borderRight: "1px solid var(--br)" }}>
         <div style={{ padding: "18px 15px 14px", borderBottom: "1px solid var(--br)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{ width: 40, height: 40, borderRadius: 6, background: "var(--acc)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 10px 15px -3px rgba(249,115,22,0.2)" }}><span style={{ fontSize: 24, fontWeight: 900, color: "#020617" }}>ST</span></div>
@@ -169,7 +201,7 @@ function AppContent() {
           ) : (
             <>
               <div style={{ padding: "12px 15px", display: "flex", flexDirection: "column", gap: 8, borderBottom: "1px solid var(--br)", marginBottom: 8 }}>
-                <button onClick={() => { setActiveProjectId(null); setMod("projects"); }} style={{ display: "flex", alignItems: "center", gap: 6, background: "transparent", border: "none", color: "var(--t3)", fontSize: 11, fontWeight: 700, cursor: "pointer", textTransform: "uppercase", padding: 0 }}>
+                  <button onClick={() => { setActiveProjectId(null); navigateModule("projects"); }} style={{ display: "flex", alignItems: "center", gap: 6, background: "transparent", border: "none", color: "var(--t3)", fontSize: 11, fontWeight: 700, cursor: "pointer", textTransform: "uppercase", padding: 0 }}>
                   <i className="ti ti-arrow-left" /> Back to Directory
                 </button>
                 <div style={{ fontSize: 15, fontWeight: 900, color: "var(--t1)", lineHeight: 1.2 }}>{activeProjectName}</div>
@@ -188,11 +220,11 @@ function AppContent() {
         </div>
       </aside>
 
-      <main className="main-content" style={{ marginLeft: 220, flex: 1, display: "flex", flexDirection: "column", minHeight: "100vh" }}>
-        <header style={{ background: "var(--s1)", borderBottom: "1px solid var(--br)", height: 64, padding: "0 24px", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", top: 0, zIndex: 50, flexShrink: 0 }}>
+      <main className={`main-content ${sidebarOpen ? "" : "sidebar-closed"}`} style={{ marginLeft: sidebarOpen ? 220 : 0, flex: 1, display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+        <header className="app-header" style={{ background: "var(--s1)", borderBottom: "1px solid var(--br)", height: 64, padding: "0 24px", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", top: 0, zIndex: 50, flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
-            <button className="hamburger-btn" onClick={() => setSidebarOpen(true)}>
-              <i className="ti ti-menu-2" />
+            <button className="hamburger-btn" aria-label={sidebarOpen ? "Close navigation menu" : "Open navigation menu"} onClick={() => setSidebarOpen(!sidebarOpen)}>
+              <i className={`ti ${sidebarOpen ? "ti-layout-sidebar-left-collapse" : "ti-menu-2"}`} />
             </button>
             <div className="header-sys-status" style={{ display: "flex", flexDirection: "column" }}>
               <span style={{ fontSize: 10, color: "var(--t4)", textTransform: "uppercase", fontWeight: 800, letterSpacing: "0.1em" }}>System Status</span>
@@ -215,7 +247,7 @@ function AppContent() {
                 <div style={{ maxHeight: 400, overflowY: "auto" }}>
                   {notifs.length === 0 && <div style={{ padding: "28px 17px", color: "var(--t3)", fontSize: 13, textAlign: "center" }}><i className="ti ti-check" style={{ fontSize: 22, display: "block", marginBottom: 6, color: "#10b981" }} />All clear!</div>}
                   {notifs.map((n: any, i: number) => (
-                    <div key={i} onClick={() => { setMod(n.goto); setNotifOpen(false); }} style={{ padding: "11px 17px", borderBottom: "1px solid var(--br)", cursor: "pointer", display: "flex", gap: 11, alignItems: "flex-start" }}>
+                    <div key={i} onClick={() => { navigateModule(n.goto); setNotifOpen(false); }} style={{ padding: "11px 17px", borderBottom: "1px solid var(--br)", cursor: "pointer", display: "flex", gap: 11, alignItems: "flex-start" }}>
                       <i className={"ti " + n.icon} style={{ fontSize: 15, color: n.color, marginTop: 2 }} /><span style={{ fontSize: 13, lineHeight: 1.4 }}>{n.text}</span>
                     </div>
                   ))}
@@ -224,7 +256,7 @@ function AppContent() {
             )}
           </div>
         </header>
-        <div style={{ flex: 1, padding: "22px 24px 60px" }} className="fadeIn">{renderMod()}</div>
+        <div style={{ flex: 1, padding: "22px 24px 60px" }} className="app-page fadeIn">{renderMod()}</div>
       </main>
 
     </div>

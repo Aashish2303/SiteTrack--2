@@ -2,17 +2,18 @@ import React, { useState } from 'react';
 import { USERS, ROLE_META } from '../constants';
 import { ConstructionScene } from './ConstructionScene';
 
-export function Login({ onLogin, showToast }: any) {
+export function Login({ onLogin, onSignUp, users = [], showToast }: any) {
   const [u, setU] = useState("");
   const [p, setP] = useState("");
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
+  const [signup, setSignup] = useState(false);
 
   const submit = async () => {
     setLoading(true);
     setErr("");
     await new Promise(r => setTimeout(r, 600));
-    const usr = USERS.find(x => x.username === u.trim() && x.password === p);
+    const usr = users.find((x: any) => x.username === u.trim() && x.password === p && x.role !== "admin");
     if (!usr) {
       setErr("Wrong username or password");
       showToast?.("Wrong username or password", "error");
@@ -21,6 +22,8 @@ export function Login({ onLogin, showToast }: any) {
     }
     onLogin(usr);
   };
+
+  if (signup) return <SignupForm users={users} onBack={() => setSignup(false)} onSignUp={onSignUp} showToast={showToast} />;
 
   return (
     <div className="blueprint-bg login-container" style={{ minHeight: "100vh", display: "flex", alignItems: "stretch", position: "relative", overflow: "hidden" }}>
@@ -114,6 +117,8 @@ export function Login({ onLogin, showToast }: any) {
             }
           </button>
 
+          <button onClick={() => setSignup(true)} style={{ width: "100%", background: "transparent", border: "1px solid var(--br)", color: "var(--t2)", borderRadius: 10, padding: "11px 14px", cursor: "pointer", fontWeight: 700, fontSize: 12, marginBottom: 24 }}><i className="ti ti-user-plus" style={{ marginRight: 7 }} />Create a new account</button>
+
           {/* Divider */}
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
             <div style={{ flex: 1, height: 1, background: "var(--br)" }} />
@@ -123,7 +128,7 @@ export function Login({ onLogin, showToast }: any) {
 
           {/* Demo users */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-            {USERS.map((usr, i) => {
+            {users.filter((usr: any) => usr.role !== "admin").map((usr: any, i: number) => {
               const color = ROLE_META[usr.role].color;
               return <div key={usr.username} onClick={() => onLogin(usr)} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid var(--br)", borderRadius: 10, padding: "10px 12px", display: "flex", alignItems: "center", gap: 10, transition: "all 0.2s", cursor: "pointer", opacity: 0, animation: `fadeIn 0.4s ease ${0.5 + i * 0.08}s forwards` }}
                 onMouseEnter={(e: any) => { e.currentTarget.style.borderColor = color; e.currentTarget.style.background = color + "11"; }}
@@ -148,4 +153,22 @@ export function Login({ onLogin, showToast }: any) {
       </div>
     </div>
   );
+}
+
+function SignupForm({ users, onBack, onSignUp, showToast }: any) {
+  const [form, setForm] = useState({ name: "", username: "", password: "", role: "engineer" });
+  const submit = () => {
+    const username = form.username.trim().toLowerCase();
+    if (!form.name.trim() || !username || form.password.length < 6) return showToast("Enter a name, username, and password of 6+ characters", "error");
+    if (users.some((user: any) => user.username === username)) return showToast("Username already exists", "error");
+    const name = form.name.trim();
+    onSignUp({ name, username, password: form.password, role: form.role, avatar: name.split(/\s+/).map((part: string) => part[0]).join("").slice(0, 2).toUpperCase() });
+  };
+  return <div className="blueprint-bg" style={{ minHeight: "100vh", display: "grid", placeItems: "center", padding: 24 }}><div style={{ width: "min(480px, 100%)", background: "var(--s1)", border: "1px solid var(--br)", borderRadius: 16, padding: 28 }}>
+    <button onClick={onBack} style={{ background: "none", border: 0, color: "var(--t2)", cursor: "pointer", padding: 0, marginBottom: 20 }}><i className="ti ti-arrow-left" /> Back to sign in</button>
+    <h1 style={{ margin: "0 0 6px" }}>Create account</h1><p style={{ color: "var(--t2)", fontSize: 13, marginBottom: 22 }}>Join your SiteTrack project team.</p>
+    {[["name", "Full name", "text"], ["username", "Username", "text"], ["password", "Password", "password"]].map(([key, label, type]) => <label key={key} style={{ display: "block", fontSize: 11, color: "var(--t3)", fontWeight: 700, marginBottom: 14 }}>{label}<input type={type} value={(form as any)[key]} onChange={e => setForm({ ...form, [key]: e.target.value })} style={{ display: "block", width: "100%", marginTop: 6 }} /></label>)}
+    <label style={{ display: "block", fontSize: 11, color: "var(--t3)", fontWeight: 700, marginBottom: 18 }}>Role<select value={form.role} onChange={e => setForm({ ...form, role: e.target.value })} style={{ display: "block", width: "100%", marginTop: 6 }}>{Object.entries(ROLE_META).filter(([role]) => !["admin", "md"].includes(role)).map(([role, meta]) => <option key={role} value={role}>{meta.label}</option>)}</select></label>
+    <button onClick={submit} style={{ width: "100%", padding: 13, background: "var(--acc)", border: 0, borderRadius: 10, color: "#fff", fontWeight: 800, cursor: "pointer" }}><i className="ti ti-user-plus" style={{ marginRight: 7 }} />Create account</button>
+  </div></div>;
 }

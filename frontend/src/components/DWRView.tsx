@@ -8,16 +8,23 @@ export function DWRView({ user, projects, dwr, setDwr, showToast }: any) {
   const em = { date: today(), projectId: projects[0]?.id || "", description: "", location: "", quantity: "", subcon: SUBCONS[0], engineer: user.role === "engineer" ? user.name : ENGINEERS[0], incharge: INCHARGES[0], remarks: "", workStatus: "Completed", carryForward: false };
   const [form, setForm] = useState(em);
   const [open, setOpen] = useState(false);
+  const [editId, setEditId] = useState<number | null>(null);
 
   const s = (k: string, v: any) => setForm(f => ({ ...f, [k]: v }));
   const canAdd = user.role === "engineer" || user.role === "qms";
 
   const save = () => {
     if (!form.description || !form.location) return showToast("Fill Description & Location", "error");
-    setDwr((d: any) => [{ ...form, id: uid(), projectId: +form.projectId, createdAt: Date.now() }, ...d]);
+    if (editId) {
+      setDwr((d: any) => d.map((entry: any) => entry.id === editId ? { ...entry, ...form, projectId: +form.projectId } : entry));
+      showToast("DWR updated!");
+    } else {
+      setDwr((d: any) => [{ ...form, id: uid(), projectId: +form.projectId, createdAt: Date.now() }, ...d]);
+      showToast("DWR saved!");
+    }
     setForm(em);
     setOpen(false);
-    showToast("DWR saved!");
+    setEditId(null);
   };
 
   const exportXLS = () => {
@@ -58,7 +65,7 @@ export function DWRView({ user, projects, dwr, setDwr, showToast }: any) {
         <div style={{ display: "flex", gap: 10 }}>
           <Btn variant="ghost" icon="ti-file-spreadsheet" sm onClick={exportXLS}>Excel</Btn>
           <Btn variant="ghost" icon="ti-file-type-pdf" sm onClick={exportPDF}>PDF</Btn>
-          {canAdd && <Btn onClick={() => setOpen(!open)} icon={open ? "ti-x" : "ti-plus"}>{open ? "Close" : "Add Work"}</Btn>}
+          {canAdd && <Btn onClick={() => { setEditId(null); setForm(em); setOpen(!open); }} icon={open ? "ti-x" : "ti-plus"}>{open ? "Close" : "Add Work"}</Btn>}
         </div>
       </div>
 
@@ -83,8 +90,8 @@ export function DWRView({ user, projects, dwr, setDwr, showToast }: any) {
             </div>
           </div>
           <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
-            <Btn onClick={save} icon="ti-device-floppy">Save</Btn>
-            <Btn variant="ghost" onClick={() => setOpen(false)}>Cancel</Btn>
+            <Btn onClick={save} icon="ti-device-floppy">{editId ? "Update" : "Save"}</Btn>
+            <Btn variant="ghost" onClick={() => { setOpen(false); setEditId(null); }}>Cancel</Btn>
           </div>
         </Card>
       )}
@@ -92,9 +99,9 @@ export function DWRView({ user, projects, dwr, setDwr, showToast }: any) {
       <Card>
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 900 }}>
-            <thead><tr>{["#", "Date", "Project", "Description", "Location", "Qty", "Status", "CF", "Engineer", "Remarks"].map(h => <TH key={h} c={h} />)}</tr></thead>
+            <thead><tr>{["#", "Date", "Project", "Description", "Location", "Qty", "Status", "CF", "Engineer", "Remarks", "Edit"].map(h => <TH key={h} c={h} />)}</tr></thead>
             <tbody>
-              {dwr.length === 0 && <tr><td colSpan={10} style={{ textAlign: "center", padding: 40, color: "var(--t3)" }}>No entries yet</td></tr>}
+              {dwr.length === 0 && <tr><td colSpan={11} style={{ textAlign: "center", padding: 40, color: "var(--t3)" }}>No entries yet</td></tr>}
               {dwr.map((r: any, i: number) => {
                 const p = projects.find((x: any) => x.id === r.projectId);
                 const isCF = r.carryForward;
@@ -106,6 +113,7 @@ export function DWRView({ user, projects, dwr, setDwr, showToast }: any) {
                     <TD><Badge text={r.workStatus || "—"} color={r.workStatus === "Completed" ? "#10b981" : r.workStatus === "Delayed - Carry Forward" ? "#fbbf24" : "var(--t3)"} /></TD>
                     <TD>{isCF ? <Badge text="CARRY FWD" color="#fbbf24" icon="ti-arrow-forward-up" /> : "—"}</TD>
                     <TD>{r.engineer}</TD><TD color="var(--t3)">{r.remarks || "—"}</TD>
+                    <TD><Btn sm variant="ghost" icon="ti-edit" onClick={() => { setForm({ ...em, ...r }); setEditId(r.id); setOpen(true); window.scrollTo({ top: 0, behavior: "smooth" }); }}>Edit</Btn></TD>
                   </tr>
                 );
               })}

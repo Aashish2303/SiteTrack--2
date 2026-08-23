@@ -100,7 +100,7 @@ export function IndentsView({ user, projects, indents, setIndents, showToast }: 
   const canRaise = user.role === "engineer" || user.role === "qms" || user.role === "admin";
 
   return (
-    <div className="fadeIn">
+    <div className="indent-page fadeIn">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
         <div><div style={{ fontSize: 26, fontWeight: 800 }}>Material Indents</div>
           <div style={{ color: "var(--t2)", fontSize: 13, marginTop: 3, display: "flex", alignItems: "center", gap: 8 }}>
@@ -164,7 +164,7 @@ export function IndentsView({ user, projects, indents, setIndents, showToast }: 
         const primaryItem = indItems[0]?.item || "—";
 
         return (
-          <div key={ind.id} style={{ background: "var(--s1)", borderRadius: 14, border: "1px solid var(--br)", borderLeft: "4px solid " + sc, marginBottom: 14, overflow: "hidden" }}>
+          <div className="indent-card" key={ind.id} style={{ background: "var(--s1)", borderRadius: 14, border: "1px solid var(--br)", borderLeft: "4px solid " + sc, marginBottom: 14, overflow: "hidden" }}>
             <div style={{ padding: "16px 20px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 10 }}>
                 <div style={{ flex: 1 }}>

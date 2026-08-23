@@ -73,7 +73,7 @@ export function ProjectsView({ user, projects, setProjects, boq, setBoq, showToa
   };
 
   return (
-    <div className="fadeIn">
+    <div className="project-directory fadeIn">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
         <div><div style={{ fontSize: 26, fontWeight: 800, letterSpacing: "-0.02em" }}>Projects</div><div style={{ color: "var(--t2)", fontSize: 13, marginTop: 3 }}>Manage construction sites and BOQs</div></div>
         {canAdd && <Btn onClick={() => setOpen(!open)} icon={open ? "ti-x" : "ti-plus"}>{open ? "Close" : "New Project"}</Btn>}
@@ -106,7 +106,7 @@ export function ProjectsView({ user, projects, setProjects, boq, setBoq, showToa
         </Card>
       )}
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 16 }}>
+      <div className="project-directory-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(300px, 100%), 1fr))", gap: 18 }}>
         {projects.map((p: any) => {
           const items = boq.filter((b: any) => b.projectId === p.id && !b.isExtra);
           const pct = items.length ? Math.round(items.reduce((s: any, i: any) => s + i.cumDone, 0) / items.reduce((s: any, i: any) => s + i.boqQty, 0) * 100) : 0;

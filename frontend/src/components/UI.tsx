@@ -13,7 +13,7 @@ export function Btn({ children, onClick, variant, sm, full, disabled, icon }: an
     purple: { background: "#9333ea", color: "#fff", border: "none", borderBottom: "4px solid #7e22ce" }
   };
   return (
-    <button disabled={disabled} onClick={onClick} style={{ ...S[variant], padding: sm ? "6px 13px" : "10px 18px", borderRadius: 6, fontWeight: 800, fontSize: sm ? 11 : 13, textTransform: "uppercase", letterSpacing: "-0.02em", cursor: disabled ? "not-allowed" : "pointer", opacity: disabled ? 0.5 : 1, width: full ? "100%" : "auto", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7, whiteSpace: "nowrap", transition: "all 0.1s" }}>
+    <button className={`ui-button ui-button-${variant}`} disabled={disabled} onClick={onClick} style={{ ...S[variant], padding: sm ? "6px 13px" : "10px 18px", borderRadius: 6, fontWeight: 800, fontSize: sm ? 11 : 13, textTransform: "uppercase", letterSpacing: "-0.02em", cursor: disabled ? "not-allowed" : "pointer", opacity: disabled ? 0.5 : 1, width: full ? "100%" : "auto", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7, whiteSpace: "nowrap", transition: "all 0.1s" }}>
       {icon && <i className={"ti " + icon} style={{ fontSize: sm ? 13 : 15 }} />}{children}
     </button>
   );
@@ -22,16 +22,16 @@ export function Btn({ children, onClick, variant, sm, full, disabled, icon }: an
 export function Inp({ value, onChange, type, placeholder, icon, readOnly }: any) {
   type = type || "text";
   return (
-    <div style={{ position: "relative" }}>
+    <div className="ui-input-wrap" style={{ position: "relative" }}>
       {icon && <i className={"ti " + icon} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "var(--t3)", fontSize: 14, pointerEvents: "none" }} />}
-      <input type={type} value={value} onChange={onChange} placeholder={placeholder || ""} readOnly={readOnly} style={{ background: "var(--s2)", border: "1px solid var(--br)", borderRadius: 8, padding: icon ? "10px 12px 10px 36px" : "10px 12px", fontSize: 13, width: "100%", color: "var(--t1)" }} />
+      <input className="ui-input" type={type} value={value} onChange={onChange} placeholder={placeholder || ""} readOnly={readOnly} style={{ background: "var(--s2)", border: "1px solid var(--br)", borderRadius: 8, padding: icon ? "10px 12px 10px 36px" : "10px 12px", fontSize: 13, width: "100%", color: "var(--t1)" }} />
     </div>
   );
 }
 
 export function Sel({ value, onChange, children }: any) {
   return (
-    <select value={value} onChange={onChange} style={{ background: "var(--s2)", border: "1px solid var(--br)", borderRadius: 8, padding: "10px 12px", fontSize: 13, width: "100%", color: "var(--t1)", cursor: "pointer" }}>
+    <select className="ui-select" value={value} onChange={onChange} style={{ background: "var(--s2)", border: "1px solid var(--br)", borderRadius: 8, padding: "10px 12px", fontSize: 13, width: "100%", color: "var(--t1)", cursor: "pointer" }}>
       {children}
     </select>
   );
@@ -42,7 +42,7 @@ export function Lbl({ children }: any) {
 }
 
 export function Card({ children, style }: any) {
-  return <div style={{ background: "var(--s2)", border: "1px solid var(--br)", borderRadius: 8, padding: "20px 22px", marginBottom: 16, ...style }}>{children}</div>;
+  return <div className="ui-card" style={{ background: "var(--s2)", border: "1px solid var(--br)", borderRadius: 8, padding: "20px 22px", marginBottom: 16, ...style }}>{children}</div>;
 }
 
 export function Badge({ text, color, icon }: any) {
